@@ -165,8 +165,23 @@ function makeWord(lettersObject) {
  *    sellTickets([25, 25, 50]) => true
  *    sellTickets([25, 100]) => false (The seller does not have enough money to give change.)
  */
-function sellTickets(/* queue */) {
-  throw new Error('Not implemented');
+function sellTickets(queue) {
+  let change = 0;
+  let index = 0;
+  let result = true;
+  do {
+    if (queue[index] - 25 > change) {
+      result = false;
+    } else if (queue[index] > 25) {
+      change -= queue[index] - 25;
+    } else {
+      change += queue[index] - 25 + 25;
+    }
+
+    index += 1;
+  } while (index < queue.length && result);
+
+  return result;
 }
 
 /**
@@ -182,8 +197,12 @@ function sellTickets(/* queue */) {
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
+  this.getArea = () => {
+    return this.width * this.height;
+  };
 }
 
 /**
@@ -196,8 +215,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 /**
@@ -211,8 +230,10 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const result = Object.create(proto);
+  Object.assign(result, JSON.parse(json));
+  return result;
 }
 
 /**
@@ -241,8 +262,12 @@ function fromJSON(/* proto, json */) {
  *      { country: 'Russia',  city: 'Saint Petersburg' }
  *    ]
  */
-function sortCitiesArray(/* arr */) {
-  throw new Error('Not implemented');
+function sortCitiesArray(arr) {
+  return arr.sort((a, b) => {
+    if (a.country < b.country) return -1;
+    if (a.country > b.country) return 1;
+    return a.city.localeCompare(b.city);
+  });
 }
 
 /**
@@ -275,8 +300,22 @@ function sortCitiesArray(/* arr */) {
  *    "Poland" => ["Lodz"]
  *   }
  */
-function group(/* array, keySelector, valueSelector */) {
-  throw new Error('Not implemented');
+function group(array, keySelector, valueSelector) {
+  const result = new Map();
+
+  array.forEach((item) => {
+    const key = keySelector(item);
+    const value = valueSelector(item);
+    if (result.has(key)) {
+      const tempArr = result.get(key);
+      tempArr.push(value);
+      result.set(key, tempArr);
+    } else {
+      result.set(key, [value]);
+    }
+  });
+
+  return result;
 }
 
 /**
@@ -332,34 +371,81 @@ function group(/* array, keySelector, valueSelector */) {
  *
  *  For more examples see unit tests.
  */
+// builder.combine(builder.element('div').id('main').class('container').class('draggable'),'+', builder.combine(builder.element('table').id('data'),'~',builder.combine(builder.element('tr').pseudoClass('nth-of-type(even)'),' ',builder.element('td').pseudoClass('nth-of-type(even)')))).stringify()
+class MyCssBuilder {
+  constructor(value) {
+    this.result = value;
+  }
+
+  stringify() {
+    return this.result;
+  }
+
+  element(value) {
+    this.result += value;
+    return this;
+  }
+
+  id(value) {
+    this.result += `#${value}`;
+    return this;
+  }
+
+  class(value) {
+    this.result += `.${value}`;
+    return this;
+  }
+
+  attr(value) {
+    this.result += `[${value}]`;
+    return this;
+  }
+
+  pseudoClass(value) {
+    this.result += `:${value}`;
+    return this;
+  }
+
+  pseudoElement(value) {
+    this.result += `::${value}`;
+    return this;
+  }
+}
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  result: '',
+
+  stringify() {
+    return this.result;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new MyCssBuilder(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new MyCssBuilder(`#${value}`);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new MyCssBuilder(`.${value}`);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new MyCssBuilder(`[${value}]`);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new MyCssBuilder(`:${value}`);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new MyCssBuilder(`::${value}`);
+  },
+
+  combine(selector1, combinator, selector2) {
+    this.result = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return this;
   },
 };
 
