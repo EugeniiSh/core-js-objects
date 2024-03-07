@@ -373,8 +373,40 @@ function group(array, keySelector, valueSelector) {
  */
 // builder.combine(builder.element('div').id('main').class('container').class('draggable'),'+', builder.combine(builder.element('table').id('data'),'~',builder.combine(builder.element('tr').pseudoClass('nth-of-type(even)'),' ',builder.element('td').pseudoClass('nth-of-type(even)')))).stringify()
 class MyCssBuilder {
-  constructor(value) {
+  constructor(selector, value) {
     this.result = value;
+    this.validate = [selector];
+  }
+
+  checkValidation() {
+    const notDoble =
+      'Element, id and pseudo-element should not occur more then one time inside the selector';
+    const wrongOrder =
+      'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element';
+
+    for (let i = 1; i < this.validate.length; i += 1) {
+      const vs = `${this.validate[i - 1]}${this.validate[i]}`;
+      if (vs === 'ee' || vs === '##' || vs === ';;;;')
+        throw new Error(notDoble);
+      if (
+        vs === '#e' ||
+        vs === '.#' ||
+        vs === '.e' ||
+        vs === '[.' ||
+        vs === '[#' ||
+        vs === '[e' ||
+        vs === ':[' ||
+        vs === ':.' ||
+        vs === ':#' ||
+        vs === ':e' ||
+        vs === ';;:' ||
+        vs === ';;[' ||
+        vs === ';;.' ||
+        vs === ';;#' ||
+        vs === ';;e'
+      )
+        throw new Error(wrongOrder);
+    }
   }
 
   stringify() {
@@ -383,31 +415,43 @@ class MyCssBuilder {
 
   element(value) {
     this.result += value;
+    this.validate.push('e');
+    this.checkValidation();
     return this;
   }
 
   id(value) {
     this.result += `#${value}`;
+    this.validate.push('#');
+    this.checkValidation();
     return this;
   }
 
   class(value) {
     this.result += `.${value}`;
+    this.validate.push('.');
+    this.checkValidation();
     return this;
   }
 
   attr(value) {
     this.result += `[${value}]`;
+    this.validate.push('[');
+    this.checkValidation();
     return this;
   }
 
   pseudoClass(value) {
     this.result += `:${value}`;
+    this.validate.push(':');
+    this.checkValidation();
     return this;
   }
 
   pseudoElement(value) {
     this.result += `::${value}`;
+    this.validate.push(';;');
+    this.checkValidation();
     return this;
   }
 }
@@ -420,27 +464,27 @@ const cssSelectorBuilder = {
   },
 
   element(value) {
-    return new MyCssBuilder(value);
+    return new MyCssBuilder('e', value);
   },
 
   id(value) {
-    return new MyCssBuilder(`#${value}`);
+    return new MyCssBuilder('#', `#${value}`);
   },
 
   class(value) {
-    return new MyCssBuilder(`.${value}`);
+    return new MyCssBuilder('.', `.${value}`);
   },
 
   attr(value) {
-    return new MyCssBuilder(`[${value}]`);
+    return new MyCssBuilder('[', `[${value}]`);
   },
 
   pseudoClass(value) {
-    return new MyCssBuilder(`:${value}`);
+    return new MyCssBuilder(':', `:${value}`);
   },
 
   pseudoElement(value) {
-    return new MyCssBuilder(`::${value}`);
+    return new MyCssBuilder(';;', `::${value}`);
   },
 
   combine(selector1, combinator, selector2) {
